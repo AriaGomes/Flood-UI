@@ -1,17 +1,29 @@
 # Use node alpine docker image
-FROM alpine:latest
-WORKDIR /home
-COPY flood.sh ./
-RUN chmod +x ./flood.sh
+FROM docker.io/node:alpine
+
+ARG PACKAGE=flood
+ARG VERSION=latest
+
+# Get specified version from npm
+RUN npm i -g "${PACKAGE}"@"${VERSION}" &&\
+    node --version &&\
+    npm ls --global &&\
+    npm cache clean --force
 
 # Install runtime dependencies
 RUN apk --no-cache add \
-    wget \
-    curl
+    mediainfo \
+    tini
+
+# Create "download" user
+RUN adduser -h /home/download -s /sbin/nologin --disabled-password download
+
+# Run as "download" user
+USER download
 
 # Expose port 3000
 EXPOSE 3000
 
 # Flood
 ENV FLOOD_OPTION_HOST="0.0.0.0"
-ENTRYPOINT ./flood.sh
+ENTRYPOINT ["/sbin/tini", "--", "flood"]
