@@ -1,7 +1,7 @@
 # Use node alpine docker image
 FROM docker.io/node:alpine
 
-ARG PACKAGE=@jesec/flood
+ARG PACKAGE=flood
 ARG VERSION=latest
 
 # Get specified version from npm
