@@ -15,11 +15,8 @@ RUN apk --no-cache add \
     mediainfo \
     tini
 
-# Create "download" user
-RUN adduser -h /home/download -s /sbin/nologin --disabled-password download
-
 # Run as "download" user
-USER download
+USER 99:100
 
 # Expose port 3000
 EXPOSE 3000
