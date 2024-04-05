@@ -15,6 +15,10 @@ RUN apk --no-cache add \
     mediainfo \
     tini
 
+# Create directory and set permissions
+RUN mkdir -p /.local/share/flood && \
+    chown -R 99:100 /.local
+
 # Run as "download" user
 USER 99:100
 
