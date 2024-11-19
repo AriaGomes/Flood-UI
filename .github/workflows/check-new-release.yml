@@ -43,13 +43,18 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Step 4: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history to ensure the commit works
 
-      # Step 4: Update the last known release
+      # Step 5: Update the last known release
       - name: Update last known release
         if: steps.compare_release.outputs.new_release == 'true'
         run: echo "$LATEST_RELEASE" > .last_release
 
-      # Step 5: commit the changes
+      # Step 6: commit the changes
       - name: Commit and Push .last_release
         run: |
           git add .last_release
@@ -58,7 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 6: Trigger the build workflow
+      # Step 7: Trigger the build workflow
       - name: Trigger Docker Build Workflow
         if: steps.compare_release.outputs.new_release == 'true'
         uses: actions/github-script@v6
