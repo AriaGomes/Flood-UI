@@ -37,12 +37,28 @@ jobs:
             echo "::set-output name=new_release::false"
           fi
 
-      # Step 3: Update the last known release
+      # Step 3: Configure Git
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+
+      # Step 4: Update the last known release
       - name: Update last known release
         if: steps.compare_release.outputs.new_release == 'true'
         run: echo "$LATEST_RELEASE" > .last_release
 
-      # Step 4: Trigger the build workflow
+      # Step 5: commit the changes
+      - name: Commit and Push .last_release
+        run: |
+          git add .last_release
+          git commit -m "Update .last_release"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 6: Trigger the build workflow
       - name: Trigger Docker Build Workflow
         if: steps.compare_release.outputs.new_release == 'true'
         uses: actions/github-script@v6
