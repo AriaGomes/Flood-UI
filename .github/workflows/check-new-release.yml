@@ -1,0 +1,56 @@
+name: Check for New Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight (UTC)
+  workflow_dispatch: # Allows manual triggering if needed
+
+jobs:
+  check-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get the latest release from jesec/flood
+      - name: Fetch latest release
+        id: get_release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/jesec/flood/releases/latest | jq -r '.tag_name')
+          echo "Latest release: $LATEST_RELEASE"
+          echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
+
+      # Step 2: Compare with the last known release
+      - name: Check if release is new
+        id: compare_release
+        run: |
+          if [ -f ".last_release" ]; then
+            LAST_RELEASE=$(cat .last_release)
+          else
+            LAST_RELEASE=""
+          fi
+          echo "Last release: $LAST_RELEASE"
+
+          if [ "$LATEST_RELEASE" != "$LAST_RELEASE" ]; then
+            echo "New release detected: $LATEST_RELEASE"
+            echo "::set-output name=new_release::true"
+          else
+            echo "No new release"
+            echo "::set-output name=new_release::false"
+          fi
+
+      # Step 3: Update the last known release
+      - name: Update last known release
+        if: steps.compare_release.outputs.new_release == 'true'
+        run: echo "$LATEST_RELEASE" > .last_release
+
+      # Step 4: Trigger the build workflow
+      - name: Trigger Docker Build Workflow
+        if: steps.compare_release.outputs.new_release == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-and-push.yml',
+              ref: 'main'
+            })
