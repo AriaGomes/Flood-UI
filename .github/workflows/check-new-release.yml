@@ -10,7 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Get the latest release from jesec/flood
+      # Step 1: Configure Git
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 2: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history to ensure the commit works
+
+      # Step 3: Get the latest release from jesec/flood
       - name: Fetch latest release
         id: get_release
         run: |
@@ -18,7 +30,7 @@ jobs:
           echo "Latest release: $LATEST_RELEASE"
           echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
 
-      # Step 2: Compare with the last known release
+      # Step 4: Compare with the last known release
       - name: Check if release is new
         id: compare_release
         run: |
@@ -36,21 +48,6 @@ jobs:
             echo "No new release"
             echo "::set-output name=new_release::false"
           fi
-
-      # Step 3: Configure Git
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Step 4: Check out the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Fetch full history to ensure the commit works
-
-      - name: Debug - Check contents of .last_release
-        run: cat .last_release
 
       # Step 5: Update the last known release (Only if a new release is detected)
       - name: Update last known release
