@@ -25,7 +25,7 @@ jobs:
           if [ -f ".last_release" ]; then
             LAST_RELEASE=$(cat .last_release)
           else
-            LAST_RELEASE=""
+            LAST_RELEASE="None"
           fi
           echo "Last release: $LAST_RELEASE"
 
@@ -49,21 +49,23 @@ jobs:
         with:
           fetch-depth: 0 # Fetch full history to ensure the commit works
 
-      # Step 5: Update the last known release
+      # Step 5: Update the last known release (Only if a new release is detected)
       - name: Update last known release
         if: steps.compare_release.outputs.new_release == 'true'
-        run: echo "$LATEST_RELEASE" > .last_release
+        run: |
+          echo "$LATEST_RELEASE" > .last_release
 
-      # Step 6: commit the changes
+      # Step 6: Commit and Push .last_release (Only if a new release is detected)
       - name: Commit and Push .last_release
+        if: steps.compare_release.outputs.new_release == 'true'
         run: |
           git add .last_release
-          git commit -m "Update .last_release"
+          git commit -m "Update .last_release to $LATEST_RELEASE"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 7: Trigger the build workflow
+      # Step 7: Trigger the build workflow (Only if a new release is detected)
       - name: Trigger Docker Build Workflow
         if: steps.compare_release.outputs.new_release == 'true'
         uses: actions/github-script@v6
