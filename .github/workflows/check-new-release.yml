@@ -19,7 +19,7 @@ jobs:
           echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
 
       - name: Debug - Check contents of .last_release
-        run: cat .last_release
+        run: cat /.last_release
 
       # Step 2: Compare with the last known release
       - name: Check if release is new
